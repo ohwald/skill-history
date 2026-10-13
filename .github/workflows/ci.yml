@@ -5,6 +5,13 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+    # capture bot 的 PR 只动 site/**,而 GITHUB_TOKEN 作者的 pull_request
+    # run 一律 action_required 永不执行,合并时被 GitHub 盖章 failure
+    # (每日红叉)。paths 过滤后此类 PR 不再创建 run;其 test check 由
+    # capture 显式 dispatch 的 CI 落在 PR head SHA 上。人工 PR 若只改
+    # site/ 不会拉起 CI,需手动 gh workflow run ci.yml -f head_sha=<sha>。
+    paths-ignore:
+      - "site/**"
   workflow_dispatch:
     inputs:
       head_sha:
