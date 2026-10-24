@@ -1,8 +1,36 @@
+<div align="center">
+
 # Skill History
 
-**[🚀 在线体验](https://ohwald.github.io/skill-history/)** · [English](README.md)
+**Agent Skills 的时光机。**
 
-Agent Skills(SKILL.md 包)的**演化历史与并排对比站**:任选两个 skill 并排深读(Monaco diff);同一 skill 沿 commit 时间轴与自己的历史版本对比;专有许可 skill 以「仅元数据」的降级方式收录。纯 Python stdlib 管线 + 零构建单文件前端,无运行时依赖。
+[![Live site](https://img.shields.io/badge/live_site-ohwald.github.io%2Fskill--history-7aa2f7)](https://ohwald.github.io/skill-history/)
+[![Skills tracked](https://img.shields.io/badge/skills-1%2C170%2B_%C2%B7_24_sources-bb9af7)](https://ohwald.github.io/skill-history/)
+[![Freshness](https://img.shields.io/badge/snapshot-rebuilt_daily-9ece6a)](https://ohwald.github.io/skill-history/)
+![Python](https://img.shields.io/badge/python-3.11%2B-565f89)
+
+[🚀 在线体验](https://ohwald.github.io/skill-history/) · [English](README.md)
+
+<img src="design-preview/hero.png" alt="版本模式:顶部 commit 时间轴,下方同一 skill 两个时点并排对比" width="980">
+
+*版本模式 — `api-and-interface-design` @ 0.6.10 vs @ 0.6.12,在顶部时间轴上任意取两点。*
+
+</div>
+
+## 这是什么?
+
+**Agent Skills** 是编码 agent 携带可复用上下文的方式——一个 `SKILL.md` 加脚本和参考资料,由 Claude Code、Codex、Cursor 等按需加载。Skill 像代码一样有版本,但一直没有什么办法看清它到底在怎么变。
+
+Skill History 就是这个生态的一扇只读窗口:
+
+- **任意两个 skill 并排深读**——真 diff 编辑器 + 贯穿双列的结构目录,不是两根滚动条。已收录 24 个源、1,170+ 个 skill,从 [anthropics/skills](https://github.com/anthropics/skills) 到社区合集。
+- **重放一个 skill 的历史**——每个 skill 都是一条 commit 时间轴(带上游 tag 标注);拖动双滑块取任意两点,看清版本之间到底改了什么。
+- **采纳前先审视**——每个 skill 的上下文成本(tokens)、行数、安装量、star、分类、许可,以及「也见于」镜像列表。
+- **看生态怎么动**——所有源每天重新采集生成新快照,站点追踪的是生态,不是一次性导出。
+
+许可感知:宽松许可的 skill 全文展示;专有/未声明的降级为「仅元数据 + 来源链接」,绝不转载原文。
+
+纯 Python stdlib 管线 + 零构建单文件前端(vanilla JS + Monaco via CDN),无运行时依赖。
 
 ## 功能
 
@@ -10,13 +38,13 @@ Agent Skills(SKILL.md 包)的**演化历史与并排对比站**:任选两个 ski
 - **版本对比**:每个槽位都是「skill @ 时间点」——任意一侧可选任意 commit(带上游 tag 标注);两槽选同一 skill 自动进入版本模式,附可点击的 commit 时间轴
 - **结构化视图**:内容按官方 SKILL.md 约定分段(YAML frontmatter + 标题层级,代码围栏不拆散),结构目录一键跳转双列;一键切换原文 diff
 - **许可感知**:宽松许可全文展示;专有/未声明 skill 降级(仅元数据 + 来源链接,不转载原文)
-- **精选内容源**:[anthropics/skills](https://github.com/anthropics/skills)、[obra/superpowers](https://github.com/obra/superpowers)、[mattpocock/skills](https://github.com/mattpocock/skills)(约 60 个;扩源改配置即可)
+- **精选内容源**:24 个源,含 [anthropics/skills](https://github.com/anthropics/skills)、[obra/superpowers](https://github.com/obra/superpowers)、[mattpocock/skills](https://github.com/mattpocock/skills)、wshobson/agents、firebase/agent-skills、prisma/skills、supabase/agent-skills 等(扩源改配置即可)
 - **六套编辑器主题**:Tokyo Night(默认)、Catppuccin Mocha、One Dark Pro、GitHub Light、One Light、Solarized Light;界面中英双语
 
 ## 快速开始
 
 ```bash
-# 采集三个内容源(单分支全历史)
+# 采集全部内容源(单分支全历史)
 python3 -m pipeline.collect
 
 # 构建(版本轴 + 可选联网辅助数据)

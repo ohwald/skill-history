@@ -1,8 +1,34 @@
+<div align="center">
+
 # Skill History
 
-**[🚀 Live site](https://ohwald.github.io/skill-history/)** · [简体中文](README.zh-CN.md)
+**The wayback machine for Agent Skills.**
 
-History & side-by-side comparison site for **Agent Skills** (SKILL.md packages): pick any two skills and read them next to each other with a real diff, compare a skill against its own history along the commit timeline, and inspect proprietary skills through metadata-only "degraded" views.
+[![Live site](https://img.shields.io/badge/live_site-ohwald.github.io%2Fskill--history-7aa2f7)](https://ohwald.github.io/skill-history/)
+[![Skills tracked](https://img.shields.io/badge/skills-1%2C170%2B_%C2%B7_24_sources-bb9af7)](https://ohwald.github.io/skill-history/)
+[![Freshness](https://img.shields.io/badge/snapshot-rebuilt_daily-9ece6a)](https://ohwald.github.io/skill-history/)
+![Python](https://img.shields.io/badge/python-3.11%2B-565f89)
+
+[🚀 Open the live site](https://ohwald.github.io/skill-history/) · [简体中文](README.zh-CN.md)
+
+<img src="design-preview/hero.png" alt="Skill History in version mode: the commit timeline on top, two commits of the same skill side by side below" width="980">
+
+*Version mode — `api-and-interface-design` @ 0.6.10 vs @ 0.6.12, picked on the commit timeline above.*
+
+</div>
+
+## What is this?
+
+**Agent Skills** are how coding agents carry reusable context — a `SKILL.md` plus scripts and references, loaded on demand by Claude Code, Codex, Cursor and friends. Skills are versioned like code, but until now there was no way to see how they actually change.
+
+Skill History is a read-only window into that ecosystem:
+
+- **Read any two skills side by side** — a real diff editor with shared structure TOC, not two scrollbars. 1,170+ skills indexed across 24 sources, from [anthropics/skills](https://github.com/anthropics/skills) to community collections.
+- **Replay a skill's history** — every skill is a commit timeline with upstream tag markers; drag the dual handles to any two points and see exactly what changed between versions.
+- **Judge a skill before you adopt it** — per-skill context cost (tokens), line counts, install counts, stars, category, license, and an "also seen in" list of mirrors.
+- **Watch the ecosystem move** — all sources are re-captured into a fresh public snapshot every day, so the site tracks the ecosystem, not a one-off export.
+
+License-aware by design: permissive-licensed skills are shown in full; proprietary or undeclared ones degrade to metadata + source link, and the original text is never reproduced.
 
 Pure Python-stdlib pipeline + a zero-build single-file frontend (vanilla JS + Monaco via CDN). No runtime dependencies.
 
@@ -12,13 +38,13 @@ Pure Python-stdlib pipeline + a zero-build single-file frontend (vanilla JS + Mo
 - **Version comparison** — every slot is a *skill @ time point*: pick any commit (with upstream tag annotations) per side; two slots on the same skill automatically become a version diff with a clickable commit timeline
 - **Structured view** — content is segmented by the official SKILL.md convention (YAML frontmatter + heading hierarchy, code fences kept intact) with a structure TOC that jumps both columns; a raw-diff toggle is one click away
 - **License-aware** — permissive-licensed skills are shown in full; proprietary/undeclared ones are *degraded* (metadata + source link only, original text never reproduced)
-- **Curated sources** — [anthropics/skills](https://github.com/anthropics/skills), [obra/superpowers](https://github.com/obra/superpowers), [mattpocock/skills](https://github.com/mattpocock/skills) (~60 skills; extend via config)
+- **Curated sources** — 24 sources incl. [anthropics/skills](https://github.com/anthropics/skills), [obra/superpowers](https://github.com/obra/superpowers), [mattpocock/skills](https://github.com/mattpocock/skills), wshobson/agents, firebase/agent-skills, prisma/skills, supabase/agent-skills …(extend via config)
 - **6 editor themes** — Tokyo Night (default), Catppuccin Mocha, One Dark Pro, GitHub Light, One Light, Solarized Light; plus a 中文/English bilingual UI
 
 ## Quick start
 
 ```bash
-# fetch the three content sources (single-branch, full history)
+# fetch all content sources (single-branch, full history)
 python3 -m pipeline.collect
 
 # build (version axis + optional networked aux data)
