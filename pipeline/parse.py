@@ -1,4 +1,4 @@
-"""SKILL.md 前置元数据解析与许可分流。容忍未知字段;畸形行跳过。"""
+"""SKILL.md frontmatter parsing and license triage. Tolerates unknown fields; malformed lines are skipped."""
 
 import re
 
@@ -9,7 +9,7 @@ KEY_RE = re.compile(r"[A-Za-z0-9_-]+")
 
 
 def parse_frontmatter(text):
-    """返回 (meta, body)。无 frontmatter 时 meta 为空、body 为原文;畸形行跳过。"""
+    """Returns (meta, body). Without frontmatter, meta is empty and body is the raw text; malformed lines are skipped."""
     m = FM_RE.match(text)
     if not m:
         return {}, text
@@ -29,9 +29,9 @@ def parse_frontmatter(text):
 
 
 def classify_license(fm_license, license_text):
-    """许可分流:返回 (status, label)。
+    """License triage: returns (status, label).
 
-    fm_license 优先;提及 proprietary/commercial 直接降级;命中宽松许可 → full;
+    frontmatter license wins; mention of proprietary/commercial degrades immediately; a permissive match → full;
     写了 LICENSE.txt / 未知值 → 看 license_text(目录内 LICENSE 文件内容)的关键词;
     全无 → degraded(undisclosed)。
     """

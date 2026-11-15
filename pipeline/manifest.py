@@ -1,4 +1,4 @@
-"""收录记录装配:遍历内容源 → 解析分流 → 同名去重(Canonical 优先 + 也见于)。"""
+"""Manifest assembly: walk sources → parse & triage → same-name dedup (canonical wins + "also seen")."""
 
 import hashlib
 import os
@@ -16,7 +16,7 @@ def approx_tokens(text):
     return max(1, len(text) // 4)
 
 
-# ---- 选择器元数据:领域标签 + 套件归属 ----
+# ---- Picker metadata: domain tags + suite membership ----
 TAG_RULES = [
     ("design", ("design", "ui", "frontend", "css", "typography", "brand", "aesthetic", "figma")),
     ("frontend", ("frontend", "react", "vue", "web", "component")),
@@ -46,7 +46,7 @@ def derive_tags(name, desc, category, source_id):
     return sorted(tags)
 
 def derive_set(source, rel_path):
-    """套件归属:默认整库一个 set;嵌套库细分到包级(wshobson 的 plugins/<pkg>/、phuryn 的 pm-*)。"""
+    """Suite membership: one set per repo by default; nested repos split down to package level (wshobson's plugins/<pkg>/, phuryn's pm-*)."""
     sid = source["id"]
     repo = source["repo"].removeprefix("https://github.com/")
     pkg = None
@@ -64,7 +64,7 @@ def derive_set(source, rel_path):
 
 
 def collect_source_entries(source, repo_dir):
-    """遍历一个内容源仓库,产出原始收录条目列表。仓库级 LICENSE 作为许可兜底。"""
+    """Walk one source repo and emit raw entries. The repo-level LICENSE is the license fallback."""
     base = os.path.join(repo_dir, source["subdir"])
     entries = []
     if not os.path.isdir(base):
@@ -86,7 +86,7 @@ def collect_source_entries(source, repo_dir):
         with open(path, encoding="utf-8", errors="replace") as f:
             text = f.read()
         meta, _body = parse_frontmatter(text)
-        body = text  # 保留原始全文(含 frontmatter):前端按官方结构分段展示
+        body = text  # keep the full raw text (frontmatter included): the frontend segments it by the official structure
         lic_text = ""
         for lic_name in ("LICENSE.txt", "LICENSE"):
             lic_path = os.path.join(root, lic_name)
@@ -145,9 +145,9 @@ def collect_source_entries(source, repo_dir):
 
 
 def assemble(entries, aux=None, bodies=None):
-    """同名去重:内容指纹一致 → Canonical 源收录、其余记「也见于」;
-    内容不同 → 视为不同 skill,非 Canonical 源加 --<source_id> 后缀。
-    bodies 传入可变 dict 时,所有收录正文的 {指纹: 文本} 会写入其中(含版本正文由调用方补充)。"""
+    """Same-name dedup: identical content fingerprints → the canonical source keeps the entry, others log "also seen";
+    different content → treated as distinct skills; non-canonical copies get a --<source_id> suffix.
+    Pass a mutable dict as bodies to collect {fingerprint: text} for all kept bodies (version bodies are added by the caller)."""
     aux = aux or {}
     stars = aux.get("stars", {})
     installs = aux.get("installs", {})
@@ -207,7 +207,7 @@ def assemble(entries, aux=None, bodies=None):
     for s in skills:
         if s.get("category"):
             s["tags"] = sorted(set((s.get("tags") or []) + [s["category"].lower()]))
-    # 重名冲突:同名但内容不同的条目互相标注(同时安装会互相覆盖,平台需提醒)。
+    # Name conflicts: same-name different-content entries annotate each other (installing both overwrites one, platforms should warn).
     by_name2 = {}
     for s in skills:
         by_name2.setdefault(s["name"], []).append(s)

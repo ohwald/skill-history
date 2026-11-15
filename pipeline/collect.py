@@ -1,6 +1,6 @@
-"""真实内容源采集:clone/fetch 仓库 + 辅助数据(marketplace 分类、skills.sh 安装量、stars)。
+"""Live source collection: clone/fetch repos + aux data (marketplace categories, skills.sh installs, stars).
 
-所有网络请求都是尽力而为:失败时记日志、返回 None,不阻断构建。
+All network requests are best-effort: on failure, log and return None without blocking the build.
 """
 
 import json
@@ -23,8 +23,8 @@ def _fetch_json(url, timeout=15):
 
 
 def ensure_repo(source, sources_dir, partial=True):
-    """clone(单分支;partial=True 用 blob:none 无内容克隆,版本轴所需元数据全有,
-    文件内容经 git show 按需取回)或更新已有仓库,返回仓库目录。"""
+    """Clone (single branch; partial=True uses a blob:none contentless clone — full metadata for the version axis,
+    file content fetched on demand via git show) or update an existing repo; returns the repo directory."""
     sources_dir = Path(sources_dir); sources_dir.mkdir(parents=True, exist_ok=True)
     d = sources_dir / source["id"]
     if (d / ".git").is_dir():
@@ -82,7 +82,7 @@ def fetch_stars(repos, cache):
 
 
 def fetch_installs(items, cache):
-    """items: [(skill 名, 来源 repo slug)]。按 source+skillId 精确匹配,取不到为 None。"""
+    """items: [(skill name, source repo slug)]. Exact match on source+skillId; None when unavailable."""
     out = cache.setdefault("installs", {})
     import time
     for name, repo in items:
@@ -98,7 +98,7 @@ def fetch_installs(items, cache):
                 hit = next((e for e in entries
                             if isinstance(e, dict) and e.get("skillId") == name
                             and (not repo or e.get("source") == repo)), None)
-                # 命中才缓存;未命中与失败都不缓存,避免把限流误当成「无数据」
+                # Cache hits only; misses and failures stay uncached so rate limits are not mistaken for "no data"
                 if hit is not None:
                     val = hit.get("installs")
                 break
