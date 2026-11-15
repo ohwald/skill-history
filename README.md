@@ -7,6 +7,7 @@
 [![Live site](https://img.shields.io/badge/live_site-ohwald.github.io%2Fskill--history-7aa2f7)](https://ohwald.github.io/skill-history/)
 [![Skills tracked](https://img.shields.io/badge/skills-1%2C170%2B_%C2%B7_24_sources-bb9af7)](https://ohwald.github.io/skill-history/)
 [![Freshness](https://img.shields.io/badge/snapshot-rebuilt_daily-9ece6a)](https://ohwald.github.io/skill-history/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-565f89)](LICENSE)
 ![Python](https://img.shields.io/badge/python-3.11%2B-565f89)
 
 [🚀 Open the live site](https://ohwald.github.io/skill-history/) · [简体中文](README.zh-CN.md)
@@ -39,7 +40,7 @@ Pure Python-stdlib pipeline + a zero-build single-file frontend (vanilla JS + Mo
 - **Structured view** — content is segmented by the official SKILL.md convention (YAML frontmatter + heading hierarchy, code fences kept intact) with a structure TOC that jumps both columns; a raw-diff toggle is one click away
 - **License-aware** — permissive-licensed skills are shown in full; proprietary/undeclared ones are *degraded* (metadata + source link only, original text never reproduced)
 - **Curated sources** — 24 sources incl. [anthropics/skills](https://github.com/anthropics/skills), [obra/superpowers](https://github.com/obra/superpowers), [mattpocock/skills](https://github.com/mattpocock/skills), wshobson/agents, firebase/agent-skills, prisma/skills, supabase/agent-skills …(extend via config)
-- **6 editor themes** — Tokyo Night (default), Catppuccin Mocha, One Dark Pro, GitHub Light, One Light, Solarized Light; plus a 中文/English bilingual UI
+- **6 editor themes** — Tokyo Night (default), Catppuccin Mocha, One Dark Pro, GitHub Light, One Light, Solarized Light; English UI by default, 中文 one click away
 
 ## Quick start
 
