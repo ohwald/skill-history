@@ -20,7 +20,7 @@ from . import versions as V
 
 THEMES_JSON = Path("design-preview/themes.json")
 TEMPLATE = Path("template/index.html")
-THEME_LABELS = {"tokyo-night": "Tokyo Night", "catppuccin-mocha": "Catppuccin Mocha",
+THEME_LABELS = {"mission-control": "Mission Control", "tokyo-night": "Tokyo Night", "catppuccin-mocha": "Catppuccin Mocha",
                 "one-dark-pro": "One Dark Pro", "github-light": "GitHub Light",
                 "one-light": "One Light", "solarized-light": "Solarized Light"}
 
