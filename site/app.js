@@ -28,7 +28,9 @@ const I18N = {
       popular:"🔥 热门",hint:"拖动双柄或点击刻度选择基线/对比时间点 · 滚轮缩放 · 空白处拖动平移",
       sideA:"基线",sideB:"对比",tagGroup:"落 tag",commitGroup:"普通提交",singleTp:"仅一个时间点",
       absent:"该时间点无此章节",tlQuick:"快捷",tlAll:"全部",tlDays:"天",tlNoPrev:"—",
-      mmLabel:"变更缩略图",
+      mmLabel:"变更缩略图",statusKeys:"j/k 步进基线 · / 搜索 · t 主题 · v 视图",
+      withheld:"已隐去",files:"文件",
+      singleTpNote:"——上游未暴露提交历史",
       tlHandleA:"基线时间点",tlHandleB:"对比时间点"},
   en:{search:"Search skills…",featured:"✨ Featured pairs",all:"All skills",empty:"No matching skills",
       lock:"Proprietary license · original text not reproduced",view:"View source ↗",
@@ -40,10 +42,12 @@ const I18N = {
       popular:"🔥 Popular",hint:"Drag the dual handles or click a tick to pick baseline/compare · wheel to zoom · drag empty space to pan",
       sideA:"Baseline",sideB:"Compare",tagGroup:"Tagged",commitGroup:"Commits",singleTp:"single timepoint",
       absent:"absent at this timepoint",tlQuick:"Quick",tlAll:"All",tlDays:"d",tlNoPrev:"—",
-      mmLabel:"change overview",
+      mmLabel:"change overview",statusKeys:"j/k step · / search · t theme · v view",
+      withheld:"withheld",files:"files",
+      singleTpNote:"— upstream exposes no commit history",
       tlHandleA:"Baseline timepoint",tlHandleB:"Compare timepoint"}
 };
-const THEMES = [{"id": "tokyo-night", "label": "Tokyo Night"}, {"id": "catppuccin-mocha", "label": "Catppuccin Mocha"}, {"id": "one-dark-pro", "label": "One Dark Pro"}, {"id": "github-light", "label": "GitHub Light"}, {"id": "one-light", "label": "One Light"}, {"id": "solarized-light", "label": "Solarized Light"}];
+const THEMES = [{"id": "mission-control", "label": "Mission Control"}, {"id": "tokyo-night", "label": "Tokyo Night"}, {"id": "catppuccin-mocha", "label": "Catppuccin Mocha"}, {"id": "one-dark-pro", "label": "One Dark Pro"}, {"id": "github-light", "label": "GitHub Light"}, {"id": "one-light", "label": "One Light"}, {"id": "solarized-light", "label": "Solarized Light"}];
 
 const q = new URLSearchParams(location.search);
 function defaultSkillId() {
@@ -57,7 +61,7 @@ const state = {
   _refsFor: null,
   _ra: parseInt(q.get("ra"), 10), _rb: parseInt(q.get("rb"), 10),
   lang: localStorage.getItem("lang") || "en",
-  theme: q.get("theme") || localStorage.getItem("theme") || "tokyo-night",
+  theme: q.get("theme") || localStorage.getItem("theme") || "mission-control",
   view: q.get("v") === "raw" ? "raw" : "sections",
   picker: null,                // "lib" | "A" | "B"
   query: "", tagFilter: null
@@ -266,6 +270,7 @@ function topbar() {
   return `<div class="topbar">
     <div class="brand">${icon("logo", 17, "var(--blue)")}<span class="bn">Skill History</span></div>
     <div class="topright">
+      <button class="cmdk" data-act="cmdk" title="⌘K /">⌘K</button>
       <div class="lang">
         <button class="${state.lang === "zh" ? "on" : ""}" data-act="lang-zh">中文</button>
         <button class="${state.lang === "en" ? "on" : ""}" data-act="lang-en">EN</button>
@@ -280,9 +285,22 @@ function consoleEl() {
 function timelineEl() {
   const s = skill();
   const vs = versionsOf(s);
-  if (!vs.length || vs.length < 2) return "";
+  if (!vs.length) return "";
+  /* Single timepoint: a static strip instead of the interactive timeline (v7·3) */
+  if (vs.length < 2) return `<div class="tlwrap"><div class="tlsingle">
+    <span class="tlsingle-dot"></span>
+    <span class="tlsingle-chip">${esc(t("singleTp"))} ${esc(t("singleTpNote"))}</span></div></div>`;
   return `<div class="tlwrap"><div id="timeline"></div>
     <div class="tlhint">${esc(t("hint"))}</div></div>`;
+}
+function statusbarHtml() {
+  const m = (document.querySelector('meta[name="build"]') || {}).content || "";
+  const mm = m.match(/(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})Z/);
+  const snap = mm ? `${mm[1]}-${mm[2]}-${mm[3]} ${mm[4]}:${mm[5]} UTC` : "dev";
+  const srcs = new Set(MANIFEST.skills.map(s => s.source)).size;
+  return `<div class="statusbar"><span>snap ${esc(snap)}</span>
+    <span class="sb-count">${MANIFEST.skills.length} skills · ${srcs} ${srcs === 1 ? "source" : "sources"} · MIT</span>
+    <span class="sb-keys">${esc(t("statusKeys"))}</span></div>`;
 }
 function render() {
   renderSeq++;
@@ -300,14 +318,14 @@ function render() {
     const nmB = `${esc(tpLabel(vs, state.ib))}`;
     heads = `<div class="colheads">` +
       colhead("A", nmA, licBadge(s.license_status) + costChip(s) + compatChip(s)) +
-      colhead("B", nmB, "") + `</div>`;
+      colhead("B", nmB, licBadge(s.license_status)) + `</div>`;
     if (s.license_status === "full" && vs.length)
       inner = viewbar() + `<div class="diffbody"><div class="loading" style="width:100%">…</div></div>`;
     else
       inner = `<div class="diffbody">${degradedPane(s)}</div>`;
   }
   app.innerHTML = topbar() + consoleEl() + timelineEl() +
-    `<div class="hero-wrap"><div class="hero">${heads}${inner}</div></div>`;
+    `<div class="hero-wrap"><div class="hero">${heads}${inner}</div></div>` + statusbarHtml();
   bind();
   mountTimeline();
   mountContent();
@@ -320,9 +338,29 @@ function colhead(side, labelHtml, metaHtml) {
     ${metaHtml || ""}</div></div>`;
 }
 function degradedPane(s) {
-  return `<div class="lockcol"><div class="circle">${icon("lock", 20, "var(--orange)")}</div>
-     <div class="note">${esc(t("lock"))}</div>
-     <button class="ghost" data-src="${esc(s.url)}">${esc(t("view"))}</button></div>`;
+  /* v7·3: degraded view, metadata only (never fetches the body) — FM block + amber lock banner + meta rows.
+   * Structure titles are unavailable by design: the manifest holds no per-section data for degraded skills. */
+  const cc = s.context_cost || {};
+  const fmLines = [
+    "---",
+    "name: " + (s.name || ""),
+    "description: " + ((s.desc || "").slice(0, 96) + (((s.desc || "").length > 96) ? "…" : "")),
+    "license: " + (s.license || "undisclosed"),
+    "---"
+  ];
+  const fm = `<div class="degfm">${fmLines.map((l, i) =>
+    `<div class="dr"><span class="g">${i + 1}</span><span class="t${/^license:/.test(l) ? " lic" : ""}">${esc(l)}</span></div>`).join("")}</div>`;
+  const bits = [];
+  if (s.lines != null) bits.push(s.lines + " " + t("lines"));
+  if (cc.trigger != null) bits.push(`${t("trigger")} ~${fmt(cc.trigger)} tok`);
+  const banner = `<div class="lockbn"><div class="t1">${icon("lock", 13, "var(--orange)")}${esc(t("lock"))}</div>
+    <div class="t2">${esc(bits.join(" · "))} · ${esc(t("withheld"))}</div>
+    <button class="ghost" data-src="${esc(s.url)}">${esc(t("view"))}</button></div>`;
+  const meta = `<div class="degmeta"><span>★ ${s.stars == null ? "—" : fmt(s.stars)}</span>
+    <span>⬇ ${s.installs == null ? "—" : fmt(s.installs)}</span>
+    <span>${(s.files || []).length} ${esc(t("files"))}</span><span>${esc(s.source || "")}</span></div>`;
+  const col = fm + banner + meta;
+  return `<div class="degcol" data-side="A">${col}</div><div class="degcol" data-side="B">${col}</div>`;
 }
 function viewbar() {
   return `<div class="viewbar">
@@ -674,6 +712,7 @@ function bind() {
     const act = el.getAttribute("data-act");
     if (act === "lang-zh") el.onclick = () => setLang("zh");
     if (act === "lang-en") el.onclick = () => setLang("en");
+    if (act === "cmdk") el.onclick = () => { state.picker = "lib"; state.query = ""; render(); };
     if (act === "theme") { el.value = state.theme; el.onchange = e => setTheme(e.target.value); }
   });
   app.querySelectorAll("[data-view]").forEach(b => b.onclick = () => setView(b.getAttribute("data-view")));
@@ -717,7 +756,20 @@ function bind() {
     }
   };
   document.onkeydown = e => {
-    if (e.key === "Escape" && state.picker) { state.picker = null; state.query = ""; render(); }
+    if (e.key === "Escape" && state.picker) { state.picker = null; state.query = ""; render(); return; }
+    const tg = (e.target && e.target.tagName) || "";
+    if (tg === "INPUT" || tg === "TEXTAREA" || tg === "SELECT") return;
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const vs = versionsOf(skill());
+    if (e.key === "j" && vs.length >= 2) setTime("A", state.ia - 1);
+    else if (e.key === "k" && vs.length >= 2) setTime("A", state.ia + 1);
+    else if (e.key === "/") { e.preventDefault(); state.picker = "lib"; state.query = ""; render(); }
+    else if (e.key === "t") {
+      const i = THEMES.findIndex(x => x.id === state.theme);
+      setTheme(THEMES[(i + 1) % THEMES.length].id);
+    }
+    else if (e.key === "v" && skill() && skill().license_status === "full")
+      setView(state.view === "sections" ? "raw" : "sections");
   };
   app.querySelectorAll("[data-src]").forEach(b => b.onclick = () => window.open(b.getAttribute("data-src"), "_blank"));
 }

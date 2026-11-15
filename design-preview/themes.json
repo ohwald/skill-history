@@ -1,6 +1,36 @@
 {
- "default": "tokyo-night",
+ "default": "mission-control",
  "themes": {
+  "mission-control": {
+   "mode": "dark",
+   "colors": {
+    "bg": "#0b0e14",
+    "panel": "#10141d",
+    "panel2": "#161b26",
+    "head": "#161b26",
+    "line": "#1f2733",
+    "dimline": "#10141d",
+    "text": "#c9d2dd",
+    "plain": "#8fa0b8",
+    "dim": "#6f7c92",
+    "faint": "#3a4354",
+    "gutter": "#3a4354",
+    "blue": "#58a6ff",
+    "blue_soft": "#1b2230",
+    "btn_fill": "#1b2230",
+    "btn_fg": "#58a6ff",
+    "purple": "#bc8fff",
+    "purple_soft": "#1f1b33",
+    "purple_ring": "#3a3342",
+    "green": "#44c06a",
+    "green_bg": "#16241b",
+    "red_bg": "#2a1c22",
+    "orange": "#d29a3f",
+    "orange_bg": "#2a2318",
+    "red": "#ff7b72"
+   },
+   "label": "Mission Control"
+  },
   "tokyo-night": {
    "mode": "dark",
    "colors": {
