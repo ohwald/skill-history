@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>时间轴原型 — Skill History v2(spec #21)</title>
+<title>Timeline Prototype — Skill History v2 (spec #21)</title>
 <style>
 :root{--font-ui:-apple-system,'PingFang SC','Segoe UI',Roboto,sans-serif;
       --font-mono:'SF Mono',ui-monospace,Menlo,Consolas,'JetBrains Mono',monospace}
-/* tokyo-night(design.pen 基准主题) */
+/* tokyo-night (design.pen base theme) */
 [data-theme="tokyo-night"]{--bg:#1a1b26;--panel:#1f2335;--panel2:#24283b;--head:#24283b;
   --line:#292e42;--dimline:#1f2335;--text:#c0caf5;--plain:#9aa5ce;--dim:#8b97bd;--faint:#565f89;
   --gutter:#3b4261;--blue:#7aa2f7;--blue-soft:#1f2b47;--purple:#bb9af7;--purple-soft:#252345;
@@ -30,15 +30,15 @@ h1{font-size:15px;font-weight:600;margin:0 0 4px}
 </head>
 <body data-theme="tokyo-night">
 <div class="wrap">
-  <h1>时间轴交互原型</h1>
-  <div class="sub">spec #21 / ADR-0001 · 数据 = <b>impeccable</b> 真实历史(60 个时间点 · 20 个落 tag)· 刻度按<b>提交日期比例</b>定位 · 纯静态可直开</div>
+  <h1>Timeline Interaction Prototype</h1>
+  <div class="sub">spec #21 / ADR-0001 · data = <b>impeccable</b> real history (60 timepoints · 20 tagged) · ticks positioned by <b>commit-date proportion</b> · pure static, opens directly</div>
   <div class="board">
     <div id="tl"></div>
     <div class="readout" id="readout"></div>
     <div class="legend">
-      <span>拖动<span style="color:var(--blue)">双柄</span>选时间点(自动锚定最近 commit)</span>
-      <span>点击刻度直达</span><span class="o">橙点/标签 = 上游 tag</span>
-      <span>滚轮缩放 · 空白拖动平移</span>
+      <span>Drag the <span style="color:var(--blue)">dual handles</span> to pick timepoints (auto-anchors to the nearest commit)</span>
+      <span>Click a tick to jump</span><span class="o">Orange dots/labels = upstream tags</span>
+      <span>Wheel zoom · drag empty space to pan</span>
     </div>
   </div>
 </div>
@@ -48,13 +48,13 @@ const DATA = [{"date":"2026-06-22","sha":"da18929df0","tags":["cli-v3.1.0","skil
 const ro = document.getElementById("readout");
 function fmt(i){const v=DATA[i];return v.date+" · "+v.sha.slice(0,7)+(v.tags.length?" · "+v.tags.join(","):"");}
 function readout(){ro.innerHTML =
-  "<b class='ca'>基线 A</b> = "+fmt(ia)+" &nbsp;→&nbsp; <b class='cb'>对比 B</b> = "+fmt(ib);}
+  "<b class='ca'>Baseline A</b> = "+fmt(ia)+" &nbsp;→&nbsp; <b class='cb'>Compare B</b> = "+fmt(ib);}
 let ia = DATA.length-2, ib = DATA.length-1;
 SkillTimeline.mount(document.getElementById("tl"), {
   versions: DATA, ia, ib,
   onChange(a,b){ ia=a; ib=b; readout(); },
-  labels:{quick:"快捷",all:"全部",days:"天",latest:"最新",noPrev:"—",
-          handleA:"基线时间点",handleB:"对比时间点"}
+  labels:{quick:"Quick",all:"All",days:"d",latest:"Latest",noPrev:"—",
+          handleA:"Baseline timepoint",handleB:"Compare timepoint"}
 });
 readout();
 </script>
