@@ -12,3 +12,6 @@ embedded-image*.png
 
 # Local research assets (screenshots etc. stay out of the repo)
 docs/research/assets/
+
+# Marketing materials (local only, not part of the public repo)
+promotion/
