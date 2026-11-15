@@ -1,7 +1,7 @@
-"""版本轴:从内容源仓库提取单个 SKILL.md 的 commit 历史(时间点 = 日期 + 短 sha)。
+"""Version axis: extract the commit history of a single SKILL.md from its source repo (timepoint = date + short sha).
 
-注意:不能用 `git log -- path`——路径简化会把「未触碰该路径的 commit」(含带 tag 的
-空 commit)整个吞掉,tag 语义随之丢失。这里取全量 log 并自行按路径过滤。
+Note: `git log -- path` cannot be used here — path simplification silently drops commits that did not touch the path
+(including empty commits carrying tags), losing their tag semantics. We take the full log and filter by path ourselves.
 """
 
 import subprocess
@@ -15,7 +15,7 @@ def _git(repo, *args):
 
 
 def load_tags(repo):
-    """返回 {sha: [tag 名, …]},annotated tag 同时映射到打标 commit(peeled)。"""
+    """Returns {sha: [tag, …]}; annotated tags also map to the tagged commit (peeled)."""
     tags = {}
     out = _git(repo, "for-each-ref", "refs/tags",
                "--format=%(refname:short)%09%(objectname)%09%(*objectname)")
@@ -31,8 +31,8 @@ def load_tags(repo):
 
 
 def _log_entries(repo):
-    """全量 commit,新 → 旧:[(sha, date, [touch 过的文件路径])],含空 commit。
-    输出中 commit 头行含 tab(sha\\tdate),文件行不含 tab,以此区分。"""
+    """All commits, newest → oldest: [(sha, date, [touched paths])], including empty commits.
+    Commit header lines contain a tab (sha\\tdate), file lines do not; that is the discriminator."""
     out = _git(repo, "log", "--format=%H%x09%ad", "--date=short", "--name-only")
     entries, cur = [], None
     for line in out.splitlines():
@@ -51,8 +51,8 @@ def _log_entries(repo):
 
 
 def extract_versions(repo, rel_path, tags=None, max_versions=60):
-    """返回某 SKILL.md 的时间点列表(旧 → 新);相邻同内容指纹去重;
-    去重跳过的 commit 或未触碰该路径的 commit,其 tag 并入最近一个保留时间点。"""
+    """Returns the timepoint list of one SKILL.md (old → new); adjacent commits with identical content fingerprints are deduped;
+    tags from skipped commits ride along onto the nearest kept timepoint."""
     tags = tags if tags is not None else load_tags(repo)
     newest_first, last_fp, pending = [], None, set()
     for e in _log_entries(repo):

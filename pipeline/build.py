@@ -1,8 +1,8 @@
-"""构建站点:python3 -m pipeline.build [--fixtures DIR | --real] [--out site] [--fetch-aux]
+"""Build the site: python3 -m pipeline.build [--fixtures DIR | --real] [--out site] [--fetch-aux]
 
-两种模式:
-  --fixtures DIR  从本地 fixtures 目录构建(测试 / 演示,无网络)
-  --real          从 .sources/ 下已克隆的三个内容源构建(先跑 python3 -m pipeline.collect)
+Two modes:
+  --fixtures DIR  build from a local fixtures directory (tests / demo, no network)
+  --real          build from the cloned sources under .sources/ (run python3 -m pipeline.collect first)
 """
 
 import argparse
@@ -39,7 +39,7 @@ def theme_list(themes):
 
 
 def build_stamp():
-    """产物指纹 = git sha + UTC 时间:线上 vs 本地一键核对,杜绝'浏览器缓存'式误诊。"""
+    """Build fingerprint = git sha + UTC time: one-glance diff between live and local, ruling out "browser cache" misdiagnoses."""
     try:
         sha = subprocess.run(["git", "rev-parse", "--short", "HEAD"],
                              capture_output=True, text=True, check=True).stdout.strip()
@@ -74,7 +74,7 @@ def build(fixtures_dir=None, real=False, sources_dir=".sources", out="site",
         s["stars"] = aux["stars"].get(s["source"])
         s["installs"] = aux["installs"].get(f'{s["name"]}@{s["source"]}')
         s["category"] = aux["categories"].get(s["name"])
-    # 版本轴 + 逐版本 diff 预计算(相对时间轴上前一版本,git 风格 +added/−removed)
+    # Version axis + per-version diff precompute (against the previous version on the timeline, git-style +added/−removed)
     import difflib
     def line_diff(prev_text, text):
         a = [l for l in prev_text.split("\n")]
@@ -107,7 +107,7 @@ def build(fixtures_dir=None, real=False, sources_dir=".sources", out="site",
         prev_text = None
         for v in versions:
             if prev_text is None:
-                v["change"] = None                      # 最早版本无前驱
+                v["change"] = None                      # earliest version has no predecessor
             else:
                 added, removed = line_diff(prev_text, bodies.get(v["fp"], ""))
                 v["change"] = None if (added == 0 and removed == 0) else {"added": added, "removed": removed}
@@ -125,8 +125,8 @@ def build(fixtures_dir=None, real=False, sources_dir=".sources", out="site",
         shutil.rmtree(out_dir)
     out_dir.mkdir(parents=True)
     if bodies_mode == "link":
-        # 零拷贝:指纹 → GitHub raw URL 映射,内容由前端按需从源仓库拉取。
-        # 版本锁定用各时间点自己的 commit;当前版用 skill.head。
+        # Zero-copy: fingerprint → GitHub raw URL map; the frontend fetches bodies from source repos on demand.
+        # Version pinning uses each timepoint's own commit; the current version uses skill.head.
         mapping = {}
         for s in manifest["skills"]:
             info = {"repo": s["source"], "dir": s["rel_path"].rsplit("/", 1)[0]}
@@ -146,7 +146,7 @@ def build(fixtures_dir=None, real=False, sources_dir=".sources", out="site",
     (out_dir / "manifest.json").write_text(
         json.dumps(manifest, ensure_ascii=False, indent=1), encoding="utf-8")
     html = TEMPLATE.read_text()
-    # 内联 lite 版:选择器/对比只需元数据;versions 与 files 清单按需 fetch 完整版
+    # Inline lite payload: picker/compare need metadata only; versions and file lists are fetched in full on demand
     LITE_FIELDS = ("id", "name", "desc", "source", "source_id", "license", "license_status",
                    "stars", "installs", "lines", "tokens", "context_cost", "compat",
                    "also_seen", "name_conflicts", "versions_count")
@@ -163,9 +163,9 @@ def build(fixtures_dir=None, real=False, sources_dir=".sources", out="site",
     app_js = (TEMPLATE.parent / "app.js").read_text()
     app_js = app_js.replace("__THEME_LIST__", theme_list(themes))
     (out_dir / "app.js").write_text(app_js, encoding="utf-8")
-    # 时间轴组件(index.html 经 <script src> 引用,静态原型 timeline.html 同源复用)
+    # Timeline component (referenced by index.html via <script src>; the static prototype timeline.html shares the source)
     (out_dir / "timeline.js").write_text((TEMPLATE.parent / "timeline.js").read_text(), encoding="utf-8")
-    # 防回归:任何产物里残留占位符 = 模板替换遗漏,直接构建失败
+    # Regression guard: any placeholder left in an artifact means a missed template substitution → hard build failure
     leftovers = []
     for f in ("index.html", "app.js", "timeline.js"):
         found = re.findall(r"__[A-Z_]+__", (out_dir / f).read_text())

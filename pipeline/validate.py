@@ -1,4 +1,4 @@
-"""构建期校验:manifest 结构、指纹一致性、时间点/精选引用完整性。失败即构建失败。"""
+"""Build-time validation: manifest structure, fingerprint consistency, timepoint/featured reference integrity. Failure fails the build."""
 
 REQUIRED_SKILL_FIELDS = {"id", "name", "desc", "source", "source_id", "license",
                          "license_status", "stars", "installs", "lines", "tokens",
@@ -7,7 +7,7 @@ REQUIRED_SKILL_FIELDS = {"id", "name", "desc", "source", "source_id", "license",
 
 
 def validate_manifest(manifest, bodies):
-    """bodies: {指纹: 正文内容}。有问题则抛 ValueError,无问题静默返回。"""
+    """bodies: {fingerprint: body text}. Raises ValueError on problems, returns silently otherwise."""
     issues = []
     ids = set()
     for s in manifest.get("skills", []):

@@ -1,8 +1,8 @@
 "use strict";
-/* Skill History v2 — 单库历史对比(spec #21 / ADR-0001)。
- * 唯一交互模型:选 skill → 时间轴选两个时间点 → 并排 diff。
- * 无双槽、无模式切换、无跨 skill 对比(旧 slot/mode 代码路径已整体移除,
- * 残留由 tests/test_frontend_bindings.py 源级守卫拦截)。
+/* Skill History v2 — single-repo skill history (spec #21 / ADR-0001).
+ * Single interaction model: pick a skill → pick two timepoints on the timeline → side-by-side diff.
+ * No dual slots, no mode switching, no cross-skill compare (the old two-slot code paths were
+ * removed wholesale; residue is caught by the source-level guard in tests/test_frontend_bindings.py).
  */
 const INLINE = JSON.parse(document.getElementById("manifest").textContent);
 let MANIFEST = INLINE;
@@ -50,13 +50,13 @@ function defaultSkillId() {
   const multi = MANIFEST.skills.find(s => (s.versions_count || (s.versions || []).length || 0) >= 2);
   return ((multi || MANIFEST.skills[0]) || {}).id || "";
 }
-/* 旧链接兼容:?a=<id> 曾是双槽左侧,静默映射到 ?s= */
+/* Legacy link compat: ?a=<id> used to be the left slot of the two-slot picker; silently maps to ?s= */
 const state = {
   sk: q.get("s") || q.get("a") || defaultSkillId(),
-  ia: 0, ib: 0,               // 由 selRefs() 惰性解析(_refsFor 防重复)
+  ia: 0, ib: 0,               // resolved lazily by selRefs() (_refsFor guards against repeat work)
   _refsFor: null,
   _ra: parseInt(q.get("ra"), 10), _rb: parseInt(q.get("rb"), 10),
-  lang: localStorage.getItem("lang") || "zh",
+  lang: localStorage.getItem("lang") || "en",
   theme: q.get("theme") || localStorage.getItem("theme") || "tokyo-night",
   view: q.get("v") === "raw" ? "raw" : "sections",
   picker: null,                // "lib" | "A" | "B"
@@ -68,12 +68,12 @@ const tf = (k, ...args) => { const v = I18N[state.lang][k]; return typeof v === 
 function skill() { return BY()[state.sk] || null; }
 function versionsOf(s) { return (s && s.versions) || []; }
 function selRefs() {
-  /* 惰性解析:首个带版本数据的渲染才落地(初始 INLINE 是 lite,无 versions,
-   * fetch 升级后重解析);默认基线 = 最新-1,对比 = 最新。 */
+  /* Lazy resolution: only lands on the first render carrying version data (the initial INLINE payload
+   * is lite, without versions; re-resolved after the fetch upgrade). Default: baseline = latest-1, compare = latest. */
   if (state._refsFor === state.sk) return;
   const vs = versionsOf(skill());
   const n = vs.length;
-  if (!n) { state.ia = state.ib = 0; return; }   // 数据未到,等下一次渲染
+  if (!n) { state.ia = state.ib = 0; return; }   // data not ready yet; wait for the next render
   let ia = Number.isInteger(state._ra) ? Math.max(0, Math.min(state._ra, n - 1)) : Math.max(0, n - 2);
   let ib = Number.isInteger(state._rb) ? Math.max(0, Math.min(state._rb, n - 1)) : n - 1;
   if (n >= 2 && ia === ib) ia = Math.max(0, ib - 1);
@@ -90,14 +90,14 @@ function syncURL() {
 }
 function selectSkill(id) {
   state.sk = id; state._ra = state._rb = null;
-  state._refsFor = null;               // 重新解析为 最新-1 / 最新
+  state._refsFor = null;               // re-resolve to latest-1 / latest
   state.picker = null; state.query = "";
   selRefs(); syncURL(); render();
 }
 function setTime(side, idx) {
   const n = versionsOf(skill()).length;
   if (n < 2) return;
-  /* 基线必须早于对比:越界选择钳到另一侧的紧邻位 */
+  /* Baseline must precede compare: out-of-range picks clamp to the nearest slot on the other side */
   if (side === "A") state.ia = Math.min(Math.max(0, idx), state.ib - 1);
   else state.ib = Math.max(Math.min(n - 1, idx), state.ia + 1);
   state.picker = null;
@@ -140,7 +140,7 @@ function compatChip(s) {
   return `${bind}<span class="stylechip">${esc(t(sk))}</span>`;
 }
 
-/* ── 控制台:库选择器 + 两个版本下拉(单行紧凑,全部定顶) ── */
+/* ── Console: library picker + two version dropdowns (single compact row, pinned to top) ── */
 function tpLabel(vs, i) {
   const v = vs[i];
   if (!v) return "—";
@@ -198,7 +198,7 @@ function vpanelEl(side, vs) {
   return `<div class="vpanel" data-stop="1">${groups.join('<div class="divider"></div>')}</div>`;
 }
 
-/* ── 库选择面板 ── */
+/* ── Library picker panel ── */
 function libPickerEl() {
   const qq = state.query.trim();
   let hits;
@@ -220,7 +220,7 @@ function libPickerEl() {
       .sort((a, b) => b.sc - a.sc).map(x => x.s);
   }
   if (state.tagFilter) hits = hits.filter(s => (s.tags || []).includes(state.tagFilter));
-  /* 精选组合 = 策展的自比对推荐(同一 skill 的两个版本);跨 skill 组合已随 ADR-0001 废弃 */
+  /* Featured combos = curated self-compare picks (two versions of one skill); cross-skill combos were retired with ADR-0001 */
   const feats = (MANIFEST.featured || []).filter(p => p[0] === p[1] && BY()[p[0]])
     .map(p => `<div class="feat" data-feat="${esc(p[0])}">${icon("spark", 12, "var(--orange)")}
      <span class="t">${esc((BY()[p[0]] || {}).name)}</span><span class="fmeta">${esc(t("sideA"))} × ${esc(t("sideB"))}</span>
@@ -258,7 +258,7 @@ function libPickerEl() {
     ${rows || `<div class="empty">${esc(t("empty"))}</div>`}</div></div>`;
 }
 
-/* ── 渲染 ── */
+/* ── Render ── */
 let renderSeq = 0, monacoEd = null;
 const app = document.getElementById("app");
 function topbar() {
@@ -332,7 +332,7 @@ function viewbar() {
     </div></div>`;
 }
 
-/* ── 时间轴(独立组件,见 timeline.js) ── */
+/* ── Timeline (standalone component, see timeline.js) ── */
 function mountTimeline() {
   const el = document.getElementById("timeline");
   const vs = versionsOf(skill());
@@ -346,7 +346,7 @@ function mountTimeline() {
   });
 }
 
-/* ── 正文加载与 diff ── */
+/* ── Body loading & diff ── */
 const bodyCache = new Map();
   let bodiesMap = null;
   function fetchBody(fp) {
@@ -359,7 +359,7 @@ const bodyCache = new Map();
     } else {
       p = fetch("bodies/" + fp + ".md").then(r => {
         if (r.status === 404) {
-          /* bodies-link 模式:404 → 拉指纹→raw URL 映射再取正文 */
+          /* bodies-link mode: on 404, fetch the fingerprint→raw-URL map first, then the body */
           return fetch("bodies.json").then(m => m.ok ? m.json() : null).then(map => {
             if (!map) return "";
             bodiesMap = map;
@@ -385,7 +385,7 @@ function mountContent() {
   });
 }
 
-/* 章节切分:按官方 SKILL.md 结构(frontmatter + 标题层级) */
+/* Section split: follows the official SKILL.md structure (frontmatter + heading hierarchy) */
 function splitSections(raw) {
   const lines = raw.split("\n");
   const secs = []; let cur = null, inFence = false, fm = false;
@@ -413,7 +413,7 @@ function splitSections(raw) {
   return secs.filter(s => s.lines.some(l => l.trim()));
 }
 function pairSections(secA, secB) {
-  /* 按层级+标题配对,两侧取并集;行级 opcodes 供对齐渲染与缩略图复用 */
+  /* Pair by level+title, union across both sides; per-line opcodes power aligned rendering and the mini-map */
   const mapA = new Map(secA.map(s => [s.key, s]));
   const mapB = new Map(secB.map(s => [s.key, s]));
   const order = secA.map(s => s.key).concat(secB.map(s => s.key).filter(k => !mapA.has(k)));
@@ -433,8 +433,8 @@ function pairSections(secA, secB) {
             added: a ? 0 : one.lines.length, removed: a ? one.lines.length : 0};
   });
 }
-/* 行级 diff:difflib 语义的 opcodes(equal/delete/insert/replace),行按 rstrip 比较
- * (与管线 +N −M 统计口径一致)。先裁公共前后缀,LCS DP + 贪心回溯取匹配链,再由链分段。 */
+/* Line diff: difflib-semantics opcodes (equal/delete/insert/replace), lines compared after rstrip
+ * (same accounting as the pipeline's +N −M stats). Trim the common prefix/suffix, then LCS DP + greedy backtracking yields the match chain; segmentation follows that chain. */
 function diffOpcodes(aLines, bLines) {
   const ra = aLines.map(l => l.replace(/\s+$/, "")), rb = bLines.map(l => l.replace(/\s+$/, ""));
   let lo = 0;
@@ -480,8 +480,8 @@ function diffOpcodes(aLines, bLines) {
   }
   return merged;
 }
-/* 行内词级 diff:token(空白/非空白段)LCS,差异段包 <b class="hl">;
- * 行过长(token>160)退化为整行底色,避免 O(n·m) 放大。 */
+/* Inline word-level diff: LCS over tokens (whitespace/non-whitespace runs), diff runs wrapped in <b class="hl">;
+ * over-long lines (>160 tokens) degrade to a full-line background to avoid O(n·m) blowups. */
 function wordDiff(oldLine, newLine) {
   const plain = {a: esc(oldLine) || " ", b: esc(newLine) || " "};
   const ta = oldLine.match(/\s+|\S+/g) || [], tb = newLine.match(/\s+|\S+/g) || [];
@@ -502,8 +502,8 @@ function wordDiff(oldLine, newLine) {
   while (j < M) { cb = put(cb, tb[j], true); j++; }
   return {a: ca || " ", b: cb || " "};
 }
-/* 单侧行渲染:与对侧逐行对齐 —— 删除/新增在对侧留 .gap 占位行(行号灰显),
- * replace 行配对做行内高亮;整节缺失侧渲染一行说明 + 占位。 */
+/* Single-side line rendering: aligned row-by-row with the opposite side — deletions/additions leave .gap
+ * placeholder rows there (dimmed line numbers); replace rows pair up for inline highlighting; a fully missing section renders one note row + placeholder. */
 function rowsForSide(pair, side) {
   const out = [];
   const row = (cls, gno, gdim, html) => out.push(
@@ -537,10 +537,10 @@ function rowsForSide(pair, side) {
           const w = wordDiff(a.lines[op.a0 + k], b.lines[op.b0 + k]);
           if (side === "A") row(" mod-a", op.a0 + k + 1, false, w.a);
           else row(" mod-b", op.b0 + k + 1, false, w.b);
-        } else if (k < nA) {          /* replace 里多出的旧行 */
+        } else if (k < nA) {          /* extra old rows inside a replace block */
           if (side === "A") row(" mod-a", op.a0 + k + 1, false, el(a.lines[op.a0 + k]));
           else row(" gap", op.a0 + k + 1, true, " ");
-        } else {                       /* replace 里多出的新行 */
+        } else {                       /* extra new rows inside a replace block */
           if (side === "A") row(" gap", op.b0 + k + 1, true, " ");
           else row(" mod-b", op.b0 + k + 1, false, el(b.lines[op.b0 + k]));
         }
@@ -549,8 +549,8 @@ function rowsForSide(pair, side) {
   }
   return out;
 }
-/* 变更缩略条:标记直接取自渲染后的变更行(mod-a 左半红 / mod-b 右半绿),
- * 折叠/展开后重算 —— 缩略图反映的是"可见表面",不是文档模型(折叠节不占高)。 */
+/* Change mini-map: markers come straight from the rendered change rows (mod-a red left half / mod-b green right half),
+ * recomputed after collapse/expand — the mini-map reflects the visible surface, not the document model (collapsed sections take no height). */
 function mountMinimap(bd, a, b) {
   bd.insertAdjacentHTML("beforeend",
     `<div class="minimap" role="scrollbar" aria-label="${esc(t("mmLabel"))}">
@@ -581,7 +581,7 @@ function mountMinimap(bd, a, b) {
   mm.onclick = e => {
     const r = mm.getBoundingClientRect();
     const ratio = Math.min(1, Math.max(0, (e.clientY - r.top) / r.height));
-    a.scrollTop = ratio * ((a.scrollHeight - a.clientHeight) || 1);   // 比例同步带动 B 列
+    a.scrollTop = ratio * ((a.scrollHeight - a.clientHeight) || 1);   // ratio sync drags column B
   };
   a.addEventListener("scroll", updateView, {passive: true});
   b.addEventListener("scroll", updateView, {passive: true});
@@ -613,8 +613,8 @@ function mountSections(ra, rb, my) {
   pairs.forEach(p => { a.insertAdjacentHTML("beforeend", secHtml("A", p)); b.insertAdjacentHTML("beforeend", secHtml("B", p)); });
   bd.appendChild(a); bd.appendChild(b);
   const rebuildMm = mountMinimap(bd, a, b);
-  /* 手风琴:章节为异步加载,绑定须在创建之后;同一章节两侧同步折叠;折叠改变
-   * 可见高度,缩略条随之重算 */
+  /* Accordion: sections load async, so binding happens after creation; both sides of a section collapse together;
+   * collapsing changes visible height, so the mini-map recomputes */
   bd.querySelectorAll(".sec-band[data-toggle]").forEach(band => band.onclick = () => {
     const key = band.getAttribute("data-toggle");
     const first = app.querySelector(`.sec[data-sec="${CSS.escape(key)}"]`);
@@ -668,7 +668,7 @@ function initMonaco(ta, tb, my) {
   } catch (e) { fail(); }
 }
 
-/* ── 绑定(守卫:渲染出的 data-* 必须在此接线) ── */
+/* ── Bindings (guard: every rendered data-* must be wired here) ── */
 function bind() {
   app.querySelectorAll("[data-act]").forEach(el => {
     const act = el.getAttribute("data-act");
@@ -710,7 +710,7 @@ function bind() {
         setTime(side, parseInt(r.getAttribute("data-vpick"), 10)));
     }
   });
-  /* 章节手风琴绑定见 mountSections(章节体异步加载后才存在) */
+  /* Section accordion binding lives in mountSections (rows exist only after the async body loads) */
   document.onclick = e => {
     if (state.picker && !e.target.closest("[data-lib]") && !e.target.closest("[data-vbtn]")) {
       state.picker = null; state.query = ""; render();

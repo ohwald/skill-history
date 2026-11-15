@@ -1,16 +1,16 @@
-"""内容源与辅助数据配置(扩源只改这里)。"""
+"""Content sources and aux data config (adding a source only touches this file)."""
 
-# 宽松许可允许全文转载(全文可比);其余(含缺失/自定义)一律降级展示。
+# Permissive licenses allow full-text reproduction (comparable in full); everything else (missing/custom) degrades.
 LENIENT_LICENSES = {
     "mit", "isc", "unlicense", "0bsd", "cc-by-4.0", "cc0-1.0",
     "apache", "apache-2.0", "apache license 2.0", "apache license, version 2.0",
     "bsd", "bsd-2-clause", "bsd-3-clause", "bsd 2-clause", "bsd 3-clause",
 }
 
-# 仓库级 LICENSE 文本中出现这些关键词即视为宽松许可。
+# These keywords in a repo-level LICENSE file mark the repo as permissive.
 LENIENT_REPO_KEYWORDS = ("apache license", "mit license", "bsd", "gnu lesser", "isc license")
 
-# v1 收录的三个内容源(priority 小者优先为 Canonical 源)。
+# The three v1 sources (lower priority number wins as the canonical source).
 SOURCES = [
     {
         "id": "anthropics",
@@ -34,7 +34,7 @@ SOURCES = [
         "branch": "main",
         "subdir": "skills",
         "priority": 3,
-        # 质量分层:半成品与废弃目录不收录(#2/#4 决议)。
+        # Quality tiering: half-finished and abandoned directories are excluded (decisions #2/#4).
         "exclude": ["in-progress/", "deprecated/"],
     },
     {
@@ -45,7 +45,7 @@ SOURCES = [
         "priority": 4,
         "exclude": [],
     },
-    # ---- 2026-10-04 扩源(尽调实测见 issue #8 评论)----
+    # ---- 2026-10-04 source expansion (due diligence in issue #8 comments) ----
     {
         "id": "azure",
         "repo": "https://github.com/microsoft/azure-skills",
@@ -58,7 +58,7 @@ SOURCES = [
         "id": "wshobson",
         "repo": "https://github.com/wshobson/agents",
         "branch": "main",
-        # 两层嵌套:plugins/<plugin>/skills/<skill>/
+        # Two nesting levels: plugins/<plugin>/skills/<skill>/
         "subdir": "plugins",
         "priority": 6,
         "exclude": [],
@@ -77,7 +77,7 @@ SOURCES = [
         "branch": "main",
         "subdir": "skills",
         "priority": 8,
-        # .system 为 Codex 内置系统技能;无仓库级 license → 全体降级展示
+        # .system holds Codex built-in system skills; no repo-level license → all degrade
         "exclude": ["skills/.system/"],
     },
     {
@@ -91,7 +91,7 @@ SOURCES = [
     {
         "id": "prisma",
         "repo": "https://github.com/prisma/skills",
-        # 顶层平铺,无 skills/ 前缀
+        # flat at the top level, no skills/ prefix
         "branch": "main",
         "subdir": ".",
         "priority": 10,
@@ -103,7 +103,7 @@ SOURCES = [
         "branch": "main",
         "subdir": "skills",
         "priority": 11,
-        # 逆向工程 API 的危险变体,合规存疑
+        # dangerous reverse-engineering API variant, compliance questionable
         "exclude": ["baoyu-danger-"],
     },
     {
@@ -114,7 +114,7 @@ SOURCES = [
         "priority": 12,
         "exclude": [],
     },
-    # ---- 2026-10-05 hub 发现扩源(52 库尽调,星标/官方/安装量驱动)----
+    # ---- 2026-10-05 hub-discovery expansion (52 repos vetted, driven by stars/official/installs) ----
     {
         "id": "caveman",
         "repo": "https://github.com/JuliusBrussee/caveman",
@@ -143,7 +143,7 @@ SOURCES = [
         "id": "impeccable",
         "repo": "https://github.com/pbakaus/impeccable",
         "branch": "main",
-        # 单技能 ×16 平台副本:canonical 在 .claude/skills/
+        # one skill ×16 platform copies: canonical lives in .claude/skills/
         "subdir": ".claude/skills",
         "priority": 16,
         "exclude": [],
@@ -228,8 +228,8 @@ AUX = {
     "github_repo_api": "https://api.github.com/repos/{repo}",
 }
 
-# 精选组合 = 策展的自比对推荐(CONTEXT.md:同一 skill 的两个值得对比的版本;
-# ADR-0001 后不再有跨 skill 组合,因此每项为 [id, id])。
+# Featured combos = curated self-compare picks (CONTEXT.md: two versions of one skill worth comparing;
+# after ADR-0001 there are no cross-skill combos, so each entry is [id, id]).
 DEFAULT_FEATURED = [
     ["impeccable", "impeccable"],
     ["test-driven-development", "test-driven-development"],

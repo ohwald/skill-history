@@ -1,13 +1,13 @@
-/* 时间轴组件(独立、无依赖):skill-history 的导航中枢。
+/* Timeline component (standalone, dependency-free): the navigation hub of skill-history.
  *
- * 规格来源 spec #21 / ADR-0001:
- *   - 刻度按提交日期比例定位(非版本序号均分);每个 commit 一个刻度,落 tag 的带 tag 标签
- *   - 双柄(基线 A / 对比 B)拖动,自动锚定最近 commit;hover 高亮 + 提示;点击刻度直达
- *   - 快捷范围 7/14/30/180 天;滚轮缩放、空白处拖动平移
- *   - 区间中央显示累计 +N −M 与时间跨度
+ * Spec source: spec #21 / ADR-0001:
+ *   - Ticks positioned proportionally by commit date (not evenly by version index); one tick per commit, tagged commits carry a tag label
+ *   - Dual handles (baseline A / compare B) drag with auto-anchoring to the nearest commit; hover highlight + tooltip; click a tick to jump
+ *   - Quick ranges 7/14/30/180 days; wheel zoom, drag empty space to pan
+ *   - Cumulative +N −M and the time span shown centered on the interval
  *
- * 用法:SkillTimeline.mount(container, {versions, ia, ib, onChange, labels})
- * 主题走页面 CSS 变量(--blue/--purple/--orange/…),组件自带样式注入,独立可直开。
+ * Usage: SkillTimeline.mount(container, {versions, ia, ib, onChange, labels})
+ * Theming rides the page's CSS variables (--blue/--purple/--orange/…); the component injects its own styles and works standalone.
  */
 "use strict";
 (function () {
@@ -69,9 +69,9 @@
 `;
 
   const DEFAULT_LABELS = {
-    quick: "快捷", all: "全部", days: "天", singleTp: "仅一个时间点",
-    latest: "最新", noPrev: "—",
-    handleA: "基线时间点", handleB: "对比时间点"
+    quick: "Quick", all: "All", days: "d", singleTp: "Single timepoint",
+    latest: "Latest", noPrev: "—",
+    handleA: "Baseline timepoint", handleB: "Compare timepoint"
   };
   const DAY = 86400000;
   const pad2 = n => String(n).padStart(2, "0");
@@ -108,7 +108,7 @@
 
     const minT = ts.length ? Math.min(...ts) : 0;
     const maxT = ts.length ? Math.max(...ts) : DAY;
-    const dataSpan = Math.max(maxT - minT, DAY);          // 全同日 → 退化为 1 天跨度
+    const dataSpan = Math.max(maxT - minT, DAY);          // all same-day → degrade to a 1-day span
     const domLo = minT - dataSpan * 0.04, domHi = maxT + dataSpan * 0.04;
     let w0 = domLo, w1 = domHi;
 
@@ -154,7 +154,7 @@
       if (w1 > domHi) { w0 -= w1 - domHi; w1 = domHi; }
       if (w0 < domLo) w0 = domLo;
     };
-    // 锚定:最近的 commit(同刻并列时贴近当前柄,避免在爆发日跳变)
+    // Anchor: nearest commit (on ties, prefer the one closer to the current handle to avoid jumping on burst days)
     function snap(t, from) {
       let best = 0, bd = Infinity, bi = Math.abs(from || 0);
       for (let i = 0; i < n; i++) {
@@ -167,7 +167,7 @@
     function setSel(a, b, commit) {
       if (a === ia && b === ib && !commit) return;
       ia = a; ib = b;
-      drawSel();                                   // 拖动中组件内自绘,落地时回调宿主
+      drawSel();                                   // self-draw while dragging; commit back to the host on release
       if (commit && opts.onChange) opts.onChange(ia, ib);
     }
     function vLabel(i) {
@@ -180,7 +180,7 @@
       const shown = [];
       for (let i = 0; i < n; i++) {
         const x = xOf(ts[i]);
-        if (x < -4 || x > W() + 4) continue;    // 窗口外不渲染,平移/缩放后重画
+        if (x < -4 || x > W() + 4) continue;    // outside the window; redrawn after pan/zoom
         const tick = document.createElement("div");
         tick.className = "tl-tick" + (vs[i].tags && vs[i].tags.length ? " tagged" : "");
         tick.style.left = x + "px";
@@ -246,7 +246,7 @@
       clampWin(); drawAll();
     }
 
-    /* ── 指针交互:柄拖动 / 空白平移 / 滚轮缩放 ── */
+    /* ── Pointer interaction: handle drag / empty-space pan / wheel zoom ── */
     let mode = null;             // "a" | "b" | "pan"
     let panX = 0, panW0 = 0, panW1 = 0, panned = false;
     function dragA(x) {
@@ -293,7 +293,7 @@
       return e.clientX - r.left;
     }
 
-    /* 滚轮缩放(以光标为中心) */
+    /* Wheel zoom (centered on the cursor) */
     stage.addEventListener("wheel", e => {
       if (disabled) return;
       e.preventDefault();
@@ -303,7 +303,7 @@
       clampWin(); drawAll();
     }, { passive: false });
 
-    /* 悬停/点击按邻近命中:同日爆发 commit 的刻度完全重叠,元素级 hover 会互相遮挡 */
+    /* Hover/click by proximity: ticks of same-day burst commits overlap fully, element-level hover would occlude */
     function nearestTick(x) {
       let best = -1, bd = 9;
       for (let i = 0; i < n; i++) {
@@ -339,7 +339,7 @@
       hot = -1;
     });
 
-    /* 点击刻度直达:移动距离较近的一侧柄(平移后的 click 不算) */
+    /* Click a tick: moves the nearer of the two handles (clicks right after a pan don't count) */
     stage.addEventListener("click", e => {
       if (disabled || panned) return;
       const i = nearestTick(px(e));
@@ -349,7 +349,7 @@
       else if (i > ia) setSel(ia, i, true);
     });
 
-    /* 键盘:左右箭头在 commit 间步进 */
+    /* Keyboard: arrow keys step between commits */
     [ha, hb].forEach(h => h.addEventListener("keydown", e => {
       if (disabled) return;
       const isA = h.getAttribute("data-h") === "a";

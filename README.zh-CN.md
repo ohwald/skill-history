@@ -7,6 +7,7 @@
 [![Live site](https://img.shields.io/badge/live_site-ohwald.github.io%2Fskill--history-7aa2f7)](https://ohwald.github.io/skill-history/)
 [![Skills tracked](https://img.shields.io/badge/skills-1%2C170%2B_%C2%B7_24_sources-bb9af7)](https://ohwald.github.io/skill-history/)
 [![Freshness](https://img.shields.io/badge/snapshot-rebuilt_daily-9ece6a)](https://ohwald.github.io/skill-history/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-565f89)](LICENSE)
 ![Python](https://img.shields.io/badge/python-3.11%2B-565f89)
 
 [🚀 在线体验](https://ohwald.github.io/skill-history/) · [English](README.md)
@@ -39,7 +40,7 @@ Skill History 就是这个生态的一扇只读窗口:
 - **结构化视图**:内容按官方 SKILL.md 约定分段(YAML frontmatter + 标题层级,代码围栏不拆散),结构目录一键跳转双列;一键切换原文 diff
 - **许可感知**:宽松许可全文展示;专有/未声明 skill 降级(仅元数据 + 来源链接,不转载原文)
 - **精选内容源**:24 个源,含 [anthropics/skills](https://github.com/anthropics/skills)、[obra/superpowers](https://github.com/obra/superpowers)、[mattpocock/skills](https://github.com/mattpocock/skills)、wshobson/agents、firebase/agent-skills、prisma/skills、supabase/agent-skills 等(扩源改配置即可)
-- **六套编辑器主题**:Tokyo Night(默认)、Catppuccin Mocha、One Dark Pro、GitHub Light、One Light、Solarized Light;界面中英双语
+- **六套编辑器主题**:Tokyo Night(默认)、Catppuccin Mocha、One Dark Pro、GitHub Light、One Light、Solarized Light;界面英语默认,中文一键切换
 
 ## 快速开始
 

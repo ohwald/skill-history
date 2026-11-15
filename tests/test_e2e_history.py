@@ -1,11 +1,11 @@
-"""无头浏览器 e2e — spec #21 验收门槛(ADR-0001 第 4 条)。
+"""Headless-browser e2e — spec #21 acceptance gate (ADR-0001 item 4).
 
-- 时间轴双柄拖动后 A/B 时间点变化;快捷范围点击生效
-- 控制台零错误;页面无 data-mode="cmp" 等双槽残留
-- 版本下拉选点 / 碰撞钳制;章节角标 + 自动展开 + 手风琴同步
+- Timeline dual-handle drags change the A/B timepoints; quick-range clicks apply
+- Zero console errors; no dual-slot residue such as data-mode="cmp" on the page
+- Version dropdown picking / collision clamping; section badges + auto-expand + accordion sync
 
-CI(ci.yml/capture.yml)显式安装 playwright;本地未安装时跳过本文件。
-站点夹具见 e2e_fixtures.py(fixtures 构建 + 多版本演示 skill)。
+CI (ci.yml/capture.yml) installs playwright explicitly; the file skips itself when playwright is missing locally.
+Site fixtures live in e2e_fixtures.py (fixtures build + a multi-version demo skill).
 """
 import http.server
 import pathlib
@@ -53,7 +53,7 @@ def page(browser, site_url):
     pg.wait_for_selector(".sec-band")
     pg._errors = errors
     yield pg
-    assert not errors, f"控制台/页面错误: {errors}"
+    assert not errors, f"console/page errors: {errors}"
     ctx.close()
 
 
@@ -63,18 +63,19 @@ def tick_dates(pg):
 
 
 def test_initial_state_defaults(page):
-    """默认 A = 最新-1、B = 最新;刻度数 = 时间点数;区间累计 +N −M 正确。"""
+    """Defaults: A = latest-1, B = latest; tick count = timepoint count; interval +N −M correct."""
     a, b = tick_dates(page)
     assert (a, b) == ("2026-09-30", "2026-10-06")
     assert page.locator(".tl-tick").count() == len(e2e_fixtures.DEMO_VERSIONS)
     mid = page.locator(".tl-dates .mid").inner_text().replace("\n", "")
-    assert "+8" in mid and "−1" in mid            # demo 最新一版 change = {added:8, removed:1}
+    assert "+8" in mid and "−1" in mid            # demo latest version change = {added:8, removed:1}
     assert page.locator(".vbtn.a .vsum").inner_text().startswith("09-30")
-    assert "最新" in page.locator(".vbtn.b .vsum").inner_text()
+    bsum = page.locator(".vbtn.b .vsum").inner_text()
+    assert "Latest" in bsum or "最新" in bsum   # language-agnostic: UI default is en, zh stays available
 
 
 def test_drag_handle_changes_points(page):
-    """双柄拖动:基线柄拖向左侧后,A 时间点与 URL ra 变化,章节角标随之重算。"""
+    """Dual-handle drag: moving the baseline handle left shifts the A timepoint and URL ra; section badges recompute."""
     before = tick_dates(page)
     box = page.locator(".tl-handle.ha").bounding_box()
     page.mouse.move(box["x"] + 14, box["y"] + 14)
@@ -84,14 +85,14 @@ def test_drag_handle_changes_points(page):
     page.mouse.up()
     page.wait_for_timeout(250)
     a, b = tick_dates(page)
-    assert a < before[0], f"A 应前移:{before[0]} → {a}"
+    assert a < before[0], f"A should move earlier: {before[0]} → {a}"
     assert b == before[1]
     assert re.search(r"ra=\d+", page.url)
     assert page.locator(".vbtn.a .vsum").inner_text().split(" · ")[0] != before[0]
 
 
 def test_drag_ordering_constraint(page):
-    """对比柄不许拖过基线柄:先把 A 拖到最左,B 再硬拖到最左 → B 停在 A 的下一个时间点。"""
+    """Compare handle must not cross the baseline: drag A fully left, then force B left — B stops at the timepoint right after A."""
     for handle in (".tl-handle.ha", ".tl-handle.hb"):
         box = page.locator(handle).bounding_box()
         page.mouse.move(box["x"] + 14, box["y"] + 14)
@@ -104,7 +105,7 @@ def test_drag_ordering_constraint(page):
 
 
 def test_quick_range_click(page):
-    """快捷范围 30 天:窗口收窄到锚点(B)附近,按钮进入激活态。"""
+    """Quick range 30d: the window narrows around the anchor (B); the button becomes active."""
     stage = page.locator(".tl-stage")
     w0, w1 = stage.get_attribute("data-win-start"), stage.get_attribute("data-win-end")
     page.locator('.tl-quick [data-range="30"]').click()

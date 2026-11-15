@@ -1,8 +1,8 @@
-"""e2e 夹具:在 fixtures 构建产物上叠加一个多版本演示 skill。
+"""e2e fixtures: overlay a multi-version demo skill on top of a fixtures build.
 
-fixtures 目录不是 git 仓库,`build --fixtures` 里每个 skill 只有 1 个时间点,
-而 e2e 要验收时间轴双柄/下拉/章节角标,需要真实的多版本数据 —— 用确定性
-的构造数据补上(日期跨度、tag、同日爆发、逐版本 +N −M 都有)。
+A fixtures directory is not a git repo, so under `build --fixtures` every skill has a single timepoint,
+while the e2e gate needs real multi-version data for the timeline handles/dropdown/section badges —
+so deterministic constructed data fills the gap (date spans, tags, same-day bursts, per-version +N −M).
 """
 import json
 import pathlib
@@ -13,7 +13,7 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 DEMO_ID = "demo-history"
-# (date, sha, tags, change, lines)  旧 → 新;含 3 个同日 commit 的爆发段
+# (date, sha, tags, change, lines)  old → new; includes a 3-same-day-commit burst segment
 DEMO_VERSIONS = [
     ("2026-05-10", "a100000001", [], None, 20),
     ("2026-05-12", "a100000002", [], {"added": 5, "removed": 0}, 22),
@@ -50,7 +50,7 @@ def demo_body(i):
 
 
 def build(out_dir: pathlib.Path) -> pathlib.Path:
-    """构建带演示 skill 的站点到 out_dir,返回站点根目录。"""
+    """Build the site with the demo skill into out_dir; returns the site root."""
     out_dir = pathlib.Path(out_dir)
     if out_dir.exists():
         shutil.rmtree(out_dir)
